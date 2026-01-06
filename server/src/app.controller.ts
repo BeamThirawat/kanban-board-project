@@ -3,10 +3,15 @@ import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) { }
+
+  @Get('health')
+  healthCheck() {
+    return this.appService.getHealthStatus();
+  }
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getApiInfo() {
+    return this.appService.getApiInfo();
   }
 }

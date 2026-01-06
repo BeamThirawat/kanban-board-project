@@ -4,11 +4,10 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
-    // OneToMany,
+    OneToMany,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-
-// import { Board } from '../../boards/entities/board.entity';
+import { Board } from '../../boards/entities/board.entity';
 
 @Entity('users')
 export class User {
@@ -38,7 +37,7 @@ export class User {
     @UpdateDateColumn()
     updated_at: Date;
 
-    // Relationship placeholder for Board entity
-    // @OneToMany(() => Board, (board) => board.owner)
-    // boards: Board[];
+    @OneToMany(() => Board, (board) => board.user)
+    boards: Board[];
 }
+

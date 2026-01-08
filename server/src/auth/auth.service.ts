@@ -1,14 +1,19 @@
 import {
     Injectable,
+    Inject,
     UnauthorizedException,
     ForbiddenException,
+    ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 import * as bcrypt from 'bcrypt';
 
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 
 @Injectable()
@@ -17,14 +22,56 @@ export class AuthService {
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
+        @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     ) { }
+
+    // สมัครสมาชิก
+    async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
+        this.logger.info(`Registering new user: ${registerDto.email}`, { context: 'AuthService' });
+
+        // ตรวจสอบว่า email ซ้ำหรือไม่
+        const existingEmail = await this.usersService.findByEmail(registerDto.email);
+        if (existingEmail) {
+            this.logger.warn(`Registration failed - email already exists: ${registerDto.email}`, { context: 'AuthService' });
+            throw new ConflictException('Email already exists');
+        }
+
+        // สร้าง user ใหม่
+        const user = await this.usersService.create({
+            username: registerDto.username,
+            email: registerDto.email,
+            password: registerDto.password,
+        });
+
+        // สร้าง tokens
+        const tokens = await this.generateTokens(user.id, user.email);
+
+        // อัปเดต refresh token ใน database
+        const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
+        await this.usersService.updateRefreshToken(user.id, hashedRefreshToken);
+
+        this.logger.info(`User registered successfully: ${user.email} (ID: ${user.id})`, { context: 'AuthService' });
+
+        return {
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+            },
+        };
+    }
 
     // เข้าสู่ระบบ
     async login(loginDto: LoginDto): Promise<AuthResponseDto> {
+        this.logger.info(`Login attempt: ${loginDto.email}`, { context: 'AuthService' });
+
         // ค้นหาผู้ใช้งานโดยใช้ email ดึงเอา password_hash มาด้วย
         const user = await this.usersService.findByPasswordWithEmail(loginDto.email);
 
         if (!user) {
+            this.logger.warn(`Login failed - user not found: ${loginDto.email}`, { context: 'AuthService' });
             throw new UnauthorizedException('Invalid credentials');
         }
 
@@ -32,6 +79,7 @@ export class AuthService {
         const isPasswordValid = await bcrypt.compare(loginDto.password, user.password_hash);
 
         if (!isPasswordValid) {
+            this.logger.warn(`Login failed - invalid password: ${loginDto.email}`, { context: 'AuthService' });
             throw new UnauthorizedException('Invalid credentials');
         }
 
@@ -44,6 +92,8 @@ export class AuthService {
 
         // อัปเดต last login
         await this.usersService.updateLastLogin(user.id);
+
+        this.logger.info(`User logged in: ${user.email} (ID: ${user.id})`, { context: 'AuthService' });
 
         return {
             accessToken: tokens.accessToken,
@@ -58,8 +108,10 @@ export class AuthService {
 
     // ออกจากระบบ
     async logout(userId: string): Promise<{ message: string }> {
+        this.logger.info(`User logout: ${userId}`, { context: 'AuthService' });
         // อัปเดต refresh token ใน database เป็น null
         await this.usersService.updateRefreshToken(userId, null);
+        this.logger.info(`User logged out successfully: ${userId}`, { context: 'AuthService' });
         return { message: 'Logged out successfully' };
     }
 

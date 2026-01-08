@@ -18,6 +18,7 @@ import {
 
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 
@@ -26,6 +27,17 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
+    // สมัครสมาชิก
+    @Post('register')
+    @ApiOperation({ summary: 'User registration', description: 'Register a new user account' })
+    @ApiBody({ type: RegisterDto })
+    @ApiResponse({ status: 201, description: 'Registration successful, returns access and refresh tokens' })
+    @ApiResponse({ status: 409, description: 'Email or username already exists' })
+    register(@Body() registerDto: RegisterDto) {
+        return this.authService.register(registerDto);
+    }
+
+    // เข้าสู่ระบบ
     @Post('login')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'User login', description: 'Authenticate user with email and password' })

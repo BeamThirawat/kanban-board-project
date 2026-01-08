@@ -14,7 +14,8 @@ async function bootstrap() {
   app.useLogger(logger);
 
   // Set global API prefix with version
-  const apiPrefix = 'kanban-board/api/v1';
+  const version = process.env.API_VERSION;
+  const apiPrefix = `kanban-board/api/v${version}`;
   app.setGlobalPrefix(apiPrefix);
 
   // Swagger Configuration
@@ -73,9 +74,10 @@ async function bootstrap() {
   app.enableCors();
 
   const port = process.env.PORT ?? 3000;
+  const host = process.env.HOST;
   await app.listen(port);
-  logger.log(`🚀 Application is running on: http://localhost:${port}/${apiPrefix}`);
-  logger.log(`📚 Swagger docs available at: http://localhost:${port}/${apiPrefix}/docs`);
+  logger.log(`🚀 Application is running on: ${host}:${port}/${apiPrefix}`);
+  logger.log(`📚 Swagger docs available at: ${host}:${port}/${apiPrefix}/docs`);
 }
 bootstrap();
 

@@ -58,6 +58,45 @@ const resources = {
             'language.en': 'English',
             'language.th': 'ไทย',
             'language.toggle': 'Change language',
+
+            // Dashboard
+            'dashboard.title': 'My Boards',
+            'dashboard.subtitle': '{{count}} boards',
+            'dashboard.noBoards': 'No boards yet',
+            'dashboard.noBoardsDescription': 'Create your first board to start organizing your tasks and projects.',
+            'dashboard.error': 'Something went wrong',
+            'dashboard.errorDescription': 'Failed to load boards. Please try again.',
+            'dashboard.createBoard': 'Create New Board',
+            'dashboard.createBoardDescription': 'Add a new board to organize your tasks.',
+            'dashboard.editBoard': 'Edit Board',
+            'dashboard.editBoardDescription': 'Update the board title.',
+
+            // Dashboard - Board Actions
+            'dashboard.board.created': 'Board created successfully!',
+            'dashboard.board.createError': 'Failed to create board',
+            'dashboard.board.updated': 'Board updated successfully!',
+            'dashboard.board.updateError': 'Failed to update board',
+            'dashboard.board.deleted': 'Board deleted successfully!',
+            'dashboard.board.deleteError': 'Failed to delete board',
+            'dashboard.board.deleteTitle': 'Delete Board',
+            'dashboard.board.confirmDelete': 'Are you sure you want to delete this board? This action cannot be undone.',
+
+            // Form - Board
+            'form.boardTitle': 'Board Title',
+            'form.boardTitlePlaceholder': 'Enter board title...',
+
+            // Common
+            'common.cancel': 'Cancel',
+            'common.create': 'Create',
+            'common.creating': 'Creating...',
+            'common.save': 'Save',
+            'common.saving': 'Saving...',
+            'common.delete': 'Delete',
+            'common.deleting': 'Deleting...',
+            'common.retry': 'Try Again',
+
+            // Auth
+            'auth.logout': 'Logout',
         },
     },
     th: {
@@ -116,6 +155,45 @@ const resources = {
             'language.en': 'English',
             'language.th': 'ไทย',
             'language.toggle': 'เปลี่ยนภาษา',
+
+            // Dashboard
+            'dashboard.title': 'บอร์ดของฉัน',
+            'dashboard.subtitle': '{{count}} บอร์ด',
+            'dashboard.noBoards': 'ยังไม่มีบอร์ด',
+            'dashboard.noBoardsDescription': 'สร้างบอร์ดแรกของคุณเพื่อเริ่มจัดการงานและโปรเจกต์',
+            'dashboard.error': 'เกิดข้อผิดพลาด',
+            'dashboard.errorDescription': 'ไม่สามารถโหลดบอร์ดได้ กรุณาลองใหม่อีกครั้ง',
+            'dashboard.createBoard': 'สร้างบอร์ดใหม่',
+            'dashboard.createBoardDescription': 'เพิ่มบอร์ดใหม่เพื่อจัดการงานของคุณ',
+            'dashboard.editBoard': 'แก้ไขบอร์ด',
+            'dashboard.editBoardDescription': 'อัปเดตชื่อบอร์ด',
+
+            // Dashboard - Board Actions
+            'dashboard.board.created': 'สร้างบอร์ดสำเร็จ!',
+            'dashboard.board.createError': 'สร้างบอร์ดไม่สำเร็จ',
+            'dashboard.board.updated': 'อัปเดตบอร์ดสำเร็จ!',
+            'dashboard.board.updateError': 'อัปเดตบอร์ดไม่สำเร็จ',
+            'dashboard.board.deleted': 'ลบบอร์ดสำเร็จ!',
+            'dashboard.board.deleteError': 'ลบบอร์ดไม่สำเร็จ',
+            'dashboard.board.deleteTitle': 'ลบบอร์ด',
+            'dashboard.board.confirmDelete': 'คุณแน่ใจหรือไม่ว่าต้องการลบบอร์ดนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้',
+
+            // Form - Board
+            'form.boardTitle': 'ชื่อบอร์ด',
+            'form.boardTitlePlaceholder': 'กรอกชื่อบอร์ด...',
+
+            // Common
+            'common.cancel': 'ยกเลิก',
+            'common.create': 'สร้าง',
+            'common.creating': 'กำลังสร้าง...',
+            'common.save': 'บันทึก',
+            'common.saving': 'กำลังบันทึก...',
+            'common.delete': 'ลบ',
+            'common.deleting': 'กำลังลบ...',
+            'common.retry': 'ลองอีกครั้ง',
+
+            // Auth
+            'auth.logout': 'ออกจากระบบ',
         },
     },
 };

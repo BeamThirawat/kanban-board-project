@@ -97,6 +97,7 @@ const resources = {
 
             // Auth
             'auth.logout': 'Logout',
+            'auth.logout.success': 'Logged out successfully',
         },
     },
     th: {
@@ -194,6 +195,7 @@ const resources = {
 
             // Auth
             'auth.logout': 'ออกจากระบบ',
+            'auth.logout.success': 'ออกจากระบบสำเร็จ',
         },
     },
 };

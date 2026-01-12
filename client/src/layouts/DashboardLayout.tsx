@@ -1,11 +1,13 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import { LanguageToggle } from '@/components/ui/language-toggle';
 import { useAuthStore } from '@/store/useAuthStore';
+import { authApi } from '@/api/auth.api';
 
 export function DashboardLayout() {
     const navigate = useNavigate();
@@ -13,9 +15,19 @@ export function DashboardLayout() {
     const user = useAuthStore((state) => state.user);
     const logout = useAuthStore((state) => state.logout);
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
+    const handleLogout = async () => {
+        try {
+            // Call backend logout API to invalidate refresh token
+            await authApi.logout();
+        } catch (error) {
+            // Continue logout even if API fails
+            console.error('Logout API error:', error);
+        } finally {
+            // Clear local state and redirect
+            logout();
+            toast.success(t('auth.logout.success', 'Logged out successfully'));
+            navigate('/login');
+        }
     };
 
     return (

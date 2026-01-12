@@ -51,7 +51,6 @@ export const useAuthStore = create<AuthStore>()(
                 // Optionally decode token to get user info if not provided
                 try {
                     const decoded = jwtDecode<JwtPayload>(accessToken);
-                    console.log('Token decoded:', decoded);
                 } catch (error) {
                     console.error('Failed to decode token:', error);
                 }

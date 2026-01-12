@@ -45,5 +45,9 @@ export const authApi = {
         api.post(`${BASE_PATH}/logout`),
 
     refreshToken: (refreshToken: string) =>
-        api.post<{ accessToken: string }>(`${BASE_PATH}/refresh`, { refreshToken }),
+        api.post<{ accessToken: string }>(
+            `${BASE_PATH}/refresh`,
+            {},
+            { headers: { Authorization: `Bearer ${refreshToken}` } }
+        ),
 };

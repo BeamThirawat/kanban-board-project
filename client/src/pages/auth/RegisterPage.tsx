@@ -28,26 +28,26 @@ import {
 } from '@/components/ui/form';
 import { authApi } from '@/api/auth.api';
 
-const registerSchema = z.object({
-    username: z
-        .string()
-        .min(3, 'validation.username.min')
-        .max(20, 'validation.username.max'),
-    email: z.string().email('validation.email.invalid'),
-    password: z
-        .string()
-        .min(8, 'validation.password.min')
-        .regex(/[A-Z]/, 'validation.password.uppercase')
-        .regex(/[a-z]/, 'validation.password.lowercase')
-        .regex(/[0-9]/, 'validation.password.number'),
-});
-
-type RegisterFormData = z.infer<typeof registerSchema>;
-
 export function RegisterPage() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const { t } = useTranslation();
+
+    const registerSchema = z.object({
+        username: z
+            .string()
+            .min(3, t('validation.username.min', { min: 3 }))
+            .max(20, t('validation.username.max', { max: 20 })),
+        email: z.string().email(t('validation.email.invalid')),
+        password: z
+            .string()
+            .min(8, t('validation.password.min', { min: 8 }))
+            .regex(/[A-Z]/, t('validation.password.uppercase'))
+            .regex(/[a-z]/, t('validation.password.lowercase'))
+            .regex(/[0-9]/, t('validation.password.number')),
+    });
+
+    type RegisterFormData = z.infer<typeof registerSchema>;
 
     const form = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),

@@ -5,47 +5,33 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    // Enable sending cookies with cross-origin requests
+    withCredentials: true,
 });
 
 // Flag to prevent multiple refresh attempts
 let isRefreshing = false;
 let failedQueue: Array<{
-    resolve: (token: string) => void;
+    resolve: () => void;
     reject: (error: unknown) => void;
 }> = [];
 
-const processQueue = (error: unknown, token: string | null = null) => {
+const processQueue = (error: unknown) => {
     failedQueue.forEach((prom) => {
         if (error) {
             prom.reject(error);
         } else {
-            prom.resolve(token!);
+            prom.resolve();
         }
     });
     failedQueue = [];
 };
 
-// Clear tokens and redirect to login
+// Clear auth and redirect to login
 const forceLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
     localStorage.removeItem('auth-storage');
     window.location.href = '/login';
 };
-
-// Request interceptor to attach Authorization header
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
 
 // Response interceptor for error handling and token refresh
 api.interceptors.response.use(
@@ -64,64 +50,25 @@ api.interceptors.response.use(
             if (isRefreshing) {
                 // Queue requests while refresh is in progress
                 return new Promise((resolve, reject) => {
-                    failedQueue.push({ resolve, reject });
-                }).then((token) => {
-                    originalRequest.headers.Authorization = `Bearer ${token}`;
-                    return api(originalRequest);
+                    failedQueue.push({ resolve: () => resolve(api(originalRequest)), reject });
                 });
             }
 
             originalRequest._retry = true;
             isRefreshing = true;
 
-            const refreshToken = localStorage.getItem('refreshToken');
-
-            if (!refreshToken) {
-                isRefreshing = false;
-                forceLogout();
-                return Promise.reject(error);
-            }
-
             try {
-                // Call refresh token API with refreshToken in Authorization header
-                // Backend expects: req.user.refreshToken (from JWT Guard)
-                const response = await axios.post(
-                    `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/kanban-board/api/v1.0.0/auth/refresh`,
-                    {},
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${refreshToken}`,
-                        },
-                    }
-                );
+                // Call refresh token API - cookies are sent automatically
+                await api.post('/kanban-board/api/v1.0.0/auth/refresh');
 
-                const { accessToken } = response.data;
+                // Process queued requests
+                processQueue(null);
 
-                // Save new access token
-                localStorage.setItem('accessToken', accessToken);
-
-                // Update auth-storage in localStorage (Zustand persist)
-                const authStorage = localStorage.getItem('auth-storage');
-                if (authStorage) {
-                    try {
-                        const parsed = JSON.parse(authStorage);
-                        parsed.state.accessToken = accessToken;
-                        localStorage.setItem('auth-storage', JSON.stringify(parsed));
-                    } catch {
-                        // Ignore parse errors
-                    }
-                }
-
-                // Process queued requests with new token
-                processQueue(null, accessToken);
-
-                // Retry original request with new token
-                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                // Retry original request
                 return api(originalRequest);
             } catch (refreshError) {
                 // Refresh failed, redirect to login
-                processQueue(refreshError, null);
+                processQueue(refreshError);
                 forceLogout();
                 return Promise.reject(refreshError);
             } finally {

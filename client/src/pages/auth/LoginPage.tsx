@@ -29,19 +29,19 @@ import {
 import { authApi } from '@/api/auth.api';
 import { useAuthStore } from '@/store/useAuthStore';
 
-const loginSchema = z.object({
-    email: z.string().email('validation.email.invalid'),
-    password: z.string().min(1, 'validation.password.required'),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
-
 export function LoginPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const login = useAuthStore((state) => state.login);
     const [isLoading, setIsLoading] = useState(false);
     const { t } = useTranslation();
+
+    const loginSchema = z.object({
+        email: z.string().email(t('validation.email.invalid')),
+        password: z.string().min(1, t('validation.password.required')),
+    });
+
+    type LoginFormData = z.infer<typeof loginSchema>;
 
     const from = location.state?.from?.pathname || '/';
 
@@ -58,8 +58,9 @@ export function LoginPage() {
         try {
             const response = await authApi.login(data);
 
-            const { accessToken, refreshToken, user } = response.data;
-            login(accessToken, refreshToken, user);
+            // Tokens are now in HttpOnly cookies - just get user from response
+            const { user } = response.data;
+            login(user);
 
             toast.success(t('auth.login.success'), {
                 description: t('auth.login.successDescription', { email: user.email }),

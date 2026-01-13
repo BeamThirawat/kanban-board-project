@@ -14,17 +14,8 @@ export interface RegisterRequest {
     password: string;
 }
 
-export interface LoginResponse {
-    accessToken: string;
-    refreshToken: string;
-    user: {
-        id: string;
-        username: string;
-        email: string;
-    };
-}
-
-export interface RegisterResponse {
+// New response format - tokens are in HttpOnly cookies
+export interface AuthResponse {
     message: string;
     user: {
         id: string;
@@ -36,18 +27,17 @@ export interface RegisterResponse {
 // Auth API Service
 export const authApi = {
     login: (data: LoginRequest) =>
-        api.post<LoginResponse>(`${BASE_PATH}/login`, data),
+        api.post<AuthResponse>(`${BASE_PATH}/login`, data),
 
     register: (data: RegisterRequest) =>
-        api.post<RegisterResponse>(`${BASE_PATH}/register`, data),
+        api.post<AuthResponse>(`${BASE_PATH}/register`, data),
 
     logout: () =>
         api.post(`${BASE_PATH}/logout`),
 
-    refreshToken: (refreshToken: string) =>
-        api.post<{ accessToken: string }>(
-            `${BASE_PATH}/refresh`,
-            {},
-            { headers: { Authorization: `Bearer ${refreshToken}` } }
-        ),
+    refresh: () =>
+        api.post(`${BASE_PATH}/refresh`),
+
+    getProfile: () =>
+        api.get(`${BASE_PATH}/profile`),
 };

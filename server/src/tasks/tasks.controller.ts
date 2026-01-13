@@ -22,6 +22,7 @@ import {
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { MoveTaskDto } from './dto/move-task.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Tasks')
@@ -60,7 +61,7 @@ export class TasksController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update task', description: 'Update task details, move between columns, or reorder' })
+  @ApiOperation({ summary: 'Update task', description: 'Update task details (title, description, etc.)' })
   @ApiParam({ name: 'id', description: 'Task UUID', type: 'string' })
   @ApiResponse({ status: 200, description: 'Task updated successfully' })
   @ApiResponse({ status: 404, description: 'Task not found' })
@@ -70,6 +71,19 @@ export class TasksController {
     @Body() updateTaskDto: UpdateTaskDto,
   ) {
     return this.tasksService.update(id, updateTaskDto);
+  }
+
+  @Patch(':id/move')
+  @ApiOperation({ summary: 'Move task', description: 'Move task to a different column and/or position' })
+  @ApiParam({ name: 'id', description: 'Task UUID', type: 'string' })
+  @ApiResponse({ status: 200, description: 'Task moved successfully' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  move(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() moveTaskDto: MoveTaskDto,
+  ) {
+    return this.tasksService.moveTask(id, moveTaskDto);
   }
 
   @Delete(':id')

@@ -7,6 +7,7 @@ import { Logger } from 'winston';
 import { Task } from './entities/task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { MoveTaskDto } from './dto/move-task.dto';
 
 @Injectable()
 export class TasksService {
@@ -79,10 +80,93 @@ export class TasksService {
         return updatedTask;
     }
 
+    // ย้าย Task ไปยัง Column ใหม่พร้อมเรียงลำดับ
+    async moveTask(id: string, moveTaskDto: MoveTaskDto): Promise<Task> {
+        const { columnId: targetColumnId, order: newOrder } = moveTaskDto;
+
+        this.logger.info(`Moving task ${id} to column ${targetColumnId} at order ${newOrder}`, { context: 'TasksService' });
+
+        const task = await this.findOne(id);
+        const sourceColumnId = task.columnId;
+        const oldOrder = task.order;
+        const isSameColumn = sourceColumnId === targetColumnId;
+
+        // ถ้าย้ายใน column เดิม
+        if (isSameColumn) {
+            if (oldOrder === newOrder) {
+                // ไม่มีการเปลี่ยนแปลง
+                return task;
+            }
+
+            // ปรับลำดับ task อื่นๆ ใน column เดียวกัน
+            if (newOrder < oldOrder) {
+                // ย้ายขึ้น: เลื่อน task ที่อยู่ระหว่าง newOrder ถึง oldOrder-1 ลง 1
+                await this.tasksRepository
+                    .createQueryBuilder()
+                    .update(Task)
+                    .set({ order: () => '"order" + 1' })
+                    .where('column_id = :columnId', { columnId: targetColumnId })
+                    .andWhere('"order" >= :newOrder', { newOrder })
+                    .andWhere('"order" < :oldOrder', { oldOrder })
+                    .andWhere('id != :taskId', { taskId: id })
+                    .execute();
+            } else {
+                // ย้ายลง: เลื่อน task ที่อยู่ระหว่าง oldOrder+1 ถึง newOrder ขึ้น 1
+                await this.tasksRepository
+                    .createQueryBuilder()
+                    .update(Task)
+                    .set({ order: () => '"order" - 1' })
+                    .where('column_id = :columnId', { columnId: targetColumnId })
+                    .andWhere('"order" > :oldOrder', { oldOrder })
+                    .andWhere('"order" <= :newOrder', { newOrder })
+                    .andWhere('id != :taskId', { taskId: id })
+                    .execute();
+            }
+        } else {
+            // ย้ายข้าม column
+
+            // 1. ลดลำดับ task ที่อยู่หลัง task ที่ย้ายออกใน source column
+            await this.tasksRepository
+                .createQueryBuilder()
+                .update(Task)
+                .set({ order: () => '"order" - 1' })
+                .where('column_id = :columnId', { columnId: sourceColumnId })
+                .andWhere('"order" > :oldOrder', { oldOrder })
+                .execute();
+
+            // 2. เพิ่มลำดับ task ที่อยู่ตั้งแต่ newOrder ใน target column
+            await this.tasksRepository
+                .createQueryBuilder()
+                .update(Task)
+                .set({ order: () => '"order" + 1' })
+                .where('column_id = :columnId', { columnId: targetColumnId })
+                .andWhere('"order" >= :newOrder', { newOrder })
+                .execute();
+        }
+
+        // อัปเดต task ที่ย้าย
+        task.columnId = targetColumnId;
+        task.order = newOrder;
+        const movedTask = await this.tasksRepository.save(task);
+
+        this.logger.info(`Task ${id} moved successfully to column ${targetColumnId} at order ${newOrder}`, { context: 'TasksService' });
+        return movedTask;
+    }
+
     // ลบ Task
     async remove(id: string): Promise<void> {
         this.logger.info(`Removing task: ${id}`, { context: 'TasksService' });
         const task = await this.findOne(id);
+
+        // ลดลำดับ task ที่อยู่หลัง task ที่ลบ
+        await this.tasksRepository
+            .createQueryBuilder()
+            .update(Task)
+            .set({ order: () => '"order" - 1' })
+            .where('column_id = :columnId', { columnId: task.columnId })
+            .andWhere('"order" > :order', { order: task.order })
+            .execute();
+
         await this.tasksRepository.remove(task);
         this.logger.info(`Task removed successfully: ${id}`, { context: 'TasksService' });
     }
